@@ -174,17 +174,35 @@
     (newline)
     (exit rc)))
 
+(define get-arg/default
+  (lambda (i default)
+    (guard (e [else default])
+      (list-ref (command-line-arguments) i))))
+
+(define arg->date
+  (lambda (i)
+    (let ([arg (get-arg/default i "today")])
+      (case (string->symbol arg)
+        [(today)
+         (current-date)]
+        [(yesterday)
+         (car (make-date-series (current-date) 2))]
+        [else
+          (case (string->number arg)
+            [(0)
+             (current-date)]
+            [else
+              (car (make-date-series (current-date) (+ 1 (string->number arg))))])]))))
+
 (cond
   [(null? (command-line-arguments))
    (show-help 1)]
   [else
     (case (string->symbol (car (command-line-arguments)))
       [(new add n a)
-       (ozzy-add-entry)]
+       (ozzy-add-entry (arg->date 1))]
       [(recent r)
-       (ozzy-show-recent
-         (guard (e [else 24])
-           (string->number (list-ref (command-line-arguments) 1))))]
+       (ozzy-show-recent (string->number (get-arg/default 1 "24")))]
       [(help h)
        (show-help 0)]
       [(info i)
