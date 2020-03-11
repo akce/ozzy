@@ -8,6 +8,8 @@
 ;; # Wednesday, 2020-03-11
 ;; ## 11:24 Title
 
+(define white/green
+  (list->string `(#\esc #\[ #\3 #\7 #\; #\4 #\2 #\m)))
 (define white/red
   (list->string `(#\esc #\[ #\3 #\7 #\; #\4 #\1 #\m)))
 (define normal
@@ -137,11 +139,11 @@
   (lambda (days)
     (for-each
       (lambda (d)
-        (let ([missing? (not (entry-exists? d))])
-          (when missing?
-            (display white/red))
+        (let ([exists? (entry-exists? d)])
+          (when exists?
+            (display white/green))
           (display (date->string d))
-          (when missing?
+          (when exists?
             (display normal))
           (newline)
           ))
