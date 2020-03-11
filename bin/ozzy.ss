@@ -30,6 +30,11 @@
     [(getenv "EDITOR") => identity]
     [else "vi"]))
 
+(define pager
+  (cond
+    [(getenv "PAGER") => identity]
+    [else editor]))
+
 (define base-dir
   (cond
     [(getenv "OZZYDIR") => identity]
@@ -140,6 +145,17 @@
          'append)
        (system (string-append "exec " editor " " fp)))]))
 
+;; Edit/view an existing entry.
+(define ozzy-view-entry
+  (case-lambda
+    [()
+     (ozzy-view-entry (current-date))]
+    [(d)
+     (let* ([fp (make-journal-path d)])
+       (if (file-exists? fp)
+           (system (string-append "exec " pager " " fp))
+           (error #f "Entry does not exist" d)))]))
+
 (define ozzy-show-recent
   (lambda (days)
     (for-each
@@ -199,6 +215,8 @@
    (show-help 1)]
   [else
     (case (string->symbol (car (command-line-arguments)))
+      [(edit view e v)
+       (ozzy-view-entry (arg->date 1))]
       [(new add n a)
        (ozzy-add-entry (arg->date 1))]
       [(recent r)
