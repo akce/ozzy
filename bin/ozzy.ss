@@ -8,6 +8,11 @@
 ;; # Wednesday, 2020-03-11
 ;; ## 11:24 Title
 
+(define white/red
+  (list->string `(#\esc #\[ #\3 #\7 #\; #\4 #\1 #\m)))
+(define normal
+  (list->string `(#\esc #\[ #\0 #\m)))
+
 (define identity
   (lambda (x)
     x))
@@ -22,6 +27,41 @@
   (cond
     [(getenv "OZZYDIR") => identity]
     [else "~/journal"]))
+
+(define dmy->date
+  (lambda (dmy)
+    (guard (e [else #f])
+      (apply make-date 0 0 0 0 dmy))))
+
+(define dmy-
+  (lambda (dmy)
+    (let ([dd (car dmy)]
+          [mm (cadr dmy)]
+          [yy (caddr dmy)])
+      (if (= (- dd 1) 0)
+          (if (= (- mm 1) 0)
+              ;; lower the year.
+              `(31 12 ,(- yy 1))
+              ;; lower the month.
+              `(31 ,(- mm 1) ,yy))
+          `(,(- dd 1) ,mm ,yy)))))
+
+(define date--
+  (lambda (d)
+    (let loop ([dmy (dmy- `(,(date-day d) ,(date-month d) ,(date-year d)))])
+      (cond
+        [(dmy->date dmy) => identity]
+        [else
+          (loop (dmy- dmy))]))))
+
+(define make-date-series
+  (lambda (d count)
+    (let loop ([acc `(,d)])
+      (cond
+        [(= (length acc) count)
+         acc]
+        [else
+          (loop (cons (date-- (car acc)) acc))]))))
 
 (define day-names
   (map
@@ -60,6 +100,10 @@
       (date->string d "")
       ".md")))
 
+(define entry-exists?
+  (lambda (d)
+    (file-exists? (make-journal-path d))))
+
 (define entry-title
   (lambda (d)
     (format
@@ -89,6 +133,20 @@
          'append)
        (system (string-append "exec " editor " " fp)))]))
 
+(define ozzy-show-recent
+  (lambda (days)
+    (for-each
+      (lambda (d)
+        (let ([missing? (not (entry-exists? d))])
+          (when missing?
+            (display white/red))
+          (display (date->string d))
+          (when missing?
+            (display normal))
+          (newline)
+          ))
+      (make-date-series (current-date) days))))
+
 (define-syntax show-nl
   (syntax-rules ()
     [(_ x x* ...)
@@ -116,6 +174,10 @@
     (case (string->symbol (car (command-line-arguments)))
       [(new add n a)
        (ozzy-add-entry)]
+      [(recent r)
+       (ozzy-show-recent
+         (guard (e [else 24])
+           (string->number (list-ref (command-line-arguments) 1))))]
       [(help h)
        (show-help 0)]
       [(info i)
