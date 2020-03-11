@@ -1,5 +1,10 @@
 #! /usr/bin/chez-scheme --program
 
+;; TODO / Ideas:
+;; - Auto commit using title.
+;; - Do not write empty entries, maybe write to temp file first?
+;; - recent to include entry titles
+
 (import
   (chezscheme))
 
