@@ -1,7 +1,6 @@
 #! /usr/bin/chez-scheme --program
 
 ;; TODO / Ideas:
-;; - Auto commit using title.
 ;; - Do not write empty entries, maybe write to temp file first?
 
 (import
@@ -143,7 +142,8 @@
                ""
                (entry-title d))))
          'append)
-       (system (string-append "exec " editor " " fp)))]))
+       (system (string-append "exec " editor " " fp)))
+     (commit d)]))
 
 ;; Edit/view an existing entry.
 (define ozzy-view-entry
@@ -207,6 +207,16 @@
                   (irregex-match-substring m 'title)
                   #f)))
           (slurp (make-journal-path d)))))))
+
+(define commit
+  (lambda (d)
+    (let ([title (last (get-titles d))]
+          [file (string-append (date->string d "") ".md")])
+      (current-directory base-dir)
+      (when (and title (file-exists? file))
+        (system (string-append "git add " file))
+        (system (string-append "git commit -m '" (date->string d) ": " title "'"))))))
+
 
 (define get-arg/default
   (lambda (i default)
