@@ -3,10 +3,10 @@
 ;; TODO / Ideas:
 ;; - Auto commit using title.
 ;; - Do not write empty entries, maybe write to temp file first?
-;; - recent to include entry titles
 
 (import
-  (chezscheme))
+  (chezscheme)
+  (irregex))
 
 ;; Markdown journal entries.
 ;; Sample format:
@@ -165,7 +165,9 @@
             (display white/green))
           (display (date->string d))
           (when exists?
-            (display normal))
+            (display normal)
+            (display " ")
+            (display (last (get-titles d))))
           (newline)
           ))
       (make-date-series (current-date) days))))
@@ -190,6 +192,22 @@
     (newline)
     (exit rc)))
 
+;; [proc] get-titles date: get the list of titles in an entry.
+(define get-titles
+  (lambda (d)
+    (let ([p (irregex '(: "##" whitespace num num ":" num num (+ whitespace)
+                          (submatch-named title (* any))))])
+
+      (filter
+        (lambda (x) (if x #t #f))
+        (map
+          (lambda (line)
+            (let ([m (irregex-search p line)])
+              (if (and m (irregex-match-valid-index? m 'title))
+                  (irregex-match-substring m 'title)
+                  #f)))
+          (slurp (make-journal-path d)))))))
+
 (define get-arg/default
   (lambda (i default)
     (guard (e [else default])
@@ -209,6 +227,28 @@
              (current-date)]
             [else
               (car (make-date-series (current-date) (+ 1 (string->number arg))))])]))))
+
+(define last
+  (lambda (lst)
+    (car (reverse lst))))
+
+;; [proc] slurp: Read all lines from a text file.
+;; Name is akin to the perl function.
+;; All lines of a file are returned as a list with newlines removed.
+(define slurp
+  (lambda (path)
+    (let ([f (open-file-input-port
+               path
+               (file-options no-create)
+               (buffer-mode line)
+               (make-transcoder (utf-8-codec)))])
+      (let loop ([line (get-line f)] [lines '()])
+        (cond
+          [(eof-object? line)
+           (close-input-port f)
+           (reverse lines)]
+          [else
+            (loop (get-line f) (cons line lines))])))))
 
 (cond
   [(null? (command-line-arguments))
