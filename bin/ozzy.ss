@@ -19,24 +19,20 @@
 (define normal
   (list->string `(#\esc #\[ #\0 #\m)))
 
-(define identity
-  (lambda (x)
-    x))
-
 (define editor
   (cond
-    [(getenv "VISUAL") => identity]
-    [(getenv "EDITOR") => identity]
+    [(getenv "VISUAL") => values]
+    [(getenv "EDITOR") => values]
     [else "vi"]))
 
 (define pager
   (cond
-    [(getenv "PAGER") => identity]
+    [(getenv "PAGER") => values]
     [else editor]))
 
 (define base-dir
   (cond
-    [(getenv "OZZYDIR") => identity]
+    [(getenv "OZZYDIR") => values]
     [else "~/journal"]))
 
 (define dmy->date
@@ -61,7 +57,7 @@
   (lambda (d)
     (let loop ([dmy (dmy- `(,(date-day d) ,(date-month d) ,(date-year d)))])
       (cond
-        [(dmy->date dmy) => identity]
+        [(dmy->date dmy) => values]
         [else
           (loop (dmy- dmy))]))))
 
