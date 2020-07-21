@@ -21,6 +21,7 @@
 
 (define editor
   (cond
+    [(getenv "OZZYED") => values]
     [(getenv "VISUAL") => values]
     [(getenv "EDITOR") => values]
     [else "vi"]))
