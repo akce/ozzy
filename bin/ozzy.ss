@@ -142,6 +142,12 @@
        (system (string-append "exec " editor " " fp)))
      (commit d)]))
 
+;; Publish journal entries upstream.
+(define ozzy-publish
+  (lambda ()
+    (current-directory base-dir)
+    (system "git push")))
+
 ;; Edit/view an existing entry.
 (define ozzy-view-entry
   (case-lambda
@@ -266,6 +272,8 @@
        (ozzy-view-entry (arg->date 1))]
       [(new add n a)
        (ozzy-add-entry (arg->date 1))]
+      [(publish pub p)
+       (ozzy-publish)]
       [(recent r)
        (ozzy-show-recent (string->number (get-arg/default 1 "24")))]
       [(help h)
