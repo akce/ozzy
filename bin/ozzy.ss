@@ -179,7 +179,7 @@
     (for-each
       (lambda (i d)
         (let ([exists? (entry-exists? d)])
-          (format #t "~2,d " i)
+          (format #t "~2,d ~a " i (substring (list-ref day-names (date-week-day d)) 0 2))
           (when exists?
             (display white/green))
           (display (date->string d))
