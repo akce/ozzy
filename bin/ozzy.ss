@@ -177,8 +177,9 @@
 (define ozzy-show-recent
   (lambda (days)
     (for-each
-      (lambda (d)
+      (lambda (i d)
         (let ([exists? (entry-exists? d)])
+          (format #t "~2,d " i)
           (when exists?
             (display white/green))
           (display (date->string d))
@@ -188,7 +189,7 @@
             (display (apply string-join "; " (get-titles d))))
           (newline)
           ))
-      (make-date-series (current-date) days))))
+      (reverse (iota days)) (make-date-series (current-date) days))))
 
 (define-syntax show-nl
   (syntax-rules ()
