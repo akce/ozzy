@@ -36,6 +36,21 @@
     [(getenv "OZZYDIR") => values]
     [else "~/journal"]))
 
+(define string-join
+  (lambda (sep . parts)
+    (define build-str
+      (lambda (acc rest)
+        (cond
+          [(null? rest)
+           (apply string-append (reverse acc))]
+          [else
+            (build-str (cons* (car rest) sep acc) (cdr rest))])))
+    (cond
+      [(null? parts)
+       ""]
+      [else
+        (build-str (list (car parts)) (cdr parts))])))
+
 (define dmy->date
   (lambda (dmy)
     (guard (e [else #f])
@@ -170,7 +185,7 @@
           (when exists?
             (display normal)
             (display " ")
-            (display (last (get-titles d))))
+            (display (apply string-join "; " (get-titles d))))
           (newline)
           ))
       (make-date-series (current-date) days))))
